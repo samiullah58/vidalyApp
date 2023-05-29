@@ -20,15 +20,27 @@ const categorySchema = new mongoose.Schema({
     minlength: 5,
     maxlength: 255,
   },
+  parent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    default: null,
+  },
+  children: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: [],
+    },
+  ],
 });
 
-categorySchema.add({
-  children: [categorySchema], // Embed the child categories within the parent category
-});
+categorySchema.methods.appendChild = function (child) {
+  this.children.push(child);
+};
 
 const Category = mongoose.model("Category", categorySchema);
 
-// the actual validation for user input
+// The actual validation for user input
 function validateCategory(category) {
   const schema = Joi.object({
     title: Joi.string().min(5).max(50).required(),
@@ -39,62 +51,6 @@ function validateCategory(category) {
   });
   return schema.validate(category);
 }
-
-// GPT
-
-// const categorySchema = new mongoose.Schema({
-//   title: {
-//     type: String,
-//     required: true,
-//     minlength: 2,
-//     maxlength: 255,
-//   },
-//   shortTitle: {
-//     type: String,
-//     required: true,
-//     minlength: 2,
-//     maxlength: 50,
-//   },
-//   description: {
-//     type: String,
-//     required: true,
-//     minlength: 2,
-//     maxlength: 2000,
-//   },
-//   parent: {
-//     type: mongoose.Schema.Types.ObjectId,
-//     ref: "Category",
-//     default: null,
-//   },
-//   children: [
-//     {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Category",
-//     },
-//   ],
-// });
-
-// categorySchema.virtual("subcategories", {
-//   ref: "Category",
-//   localField: "_id",
-//   foreignField: "parent",
-//   justOne: false,
-// });
-
-// categorySchema.set("toObject", { virtuals: true });
-// categorySchema.set("toJSON", { virtuals: true });
-
-// const Category = mongoose.model("Category", categorySchema);
-
-// function validateCategory(category) {
-//   const schema = Joi.object({
-//     title: Joi.string().min(2).max(255).required(),
-//     shortTitle: Joi.string().min(2).max(50).required(),
-//     description: Joi.string().min(2).max(2000).required(),
-//   });
-
-//   return schema.validate(category);
-// }
 
 exports.categorySchema = categorySchema;
 exports.Category = Category;
