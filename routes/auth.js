@@ -2,7 +2,6 @@ const bcrypt = require("bcrypt");
 const _ = require("lodash");
 const Joi = require("joi");
 const { User } = require("../model/users");
-const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 
