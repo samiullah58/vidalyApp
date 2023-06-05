@@ -2,7 +2,6 @@ const { User } = require("../../model/users");
 const { Genre } = require("../../model/genres");
 const request = require("supertest");
 let server;
-console.log(process.env.NODE_ENV);
 
 describe("auth middleware", () => {
   beforeEach(() => {
@@ -10,7 +9,7 @@ describe("auth middleware", () => {
   });
 
   afterEach(async () => {
-    server.close();
+    await server.close();
     await Genre.deleteMany({});
   });
 

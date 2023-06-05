@@ -1,3 +1,6 @@
+const admin = require("../middleware/admin");
+const auth = require("../middleware/auth");
+const objectId = require("../middleware/validateObjectId");
 const { Category, validate } = require("../model/category");
 const express = require("express");
 const router = express.Router();
@@ -8,7 +11,7 @@ router.get("/", async (req, res) => {
   res.send(categories);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -42,40 +45,33 @@ router.post("/", async (req, res) => {
   res.send(category);
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", [objectId, auth], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { title, shortTitle, description } = req.body;
-  const parentId = req.params.id;
+  const category = await Category.findByIdAndUpdate(
+    req.params.id,
+    {
+      title: req.body.title,
+      shortTitle: req.body.shortTitle,
+      description: req.body.description,
+    },
+    {
+      new: true,
+    }
+  );
 
-  // Check if the parent ID exists and is valid
-  const parentCategory = await Category.findById(parentId);
-  if (!parentCategory) {
-    return res.status(400).send("Invalid parent category ID is");
-  }
-
-  const childCategory = {
-    title: title,
-    shortTitle: shortTitle,
-    description: description,
-    children: [], // Set an empty array for the child category's children
-  };
-
-  // Add the child category to the parent category's children array
-  parentCategory.children.push(childCategory);
-  await parentCategory.save();
-
-  res.send(childCategory);
+  if (!category) return res.status(404).send("Category not found.");
+  res.send(category);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", [objectId, admin, auth], async (req, res) => {
   const category = await Category.findByIdAndDelete(req.params.id);
   if (!category) res.status(404).send("Category Not Found");
   res.send(category);
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", objectId, async (req, res) => {
   const category = await Category.findById(req.params.id).populate("children");
   if (!category) res.status(404).send("Category Not Found");
   res.send(category);
